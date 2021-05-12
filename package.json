@@ -1,0 +1,83 @@
+{
+  "name": "sidewindow",
+  "displayName": "SideWindow",
+  "description": "SideWindow: view & edit your files from another device",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.56.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:sidewindow.startConnection"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "sidewindowViewContainer",
+          "title": "sidewindow Container",
+          "icon": "$(ports-open-browser-icon)"
+        }
+      ]
+    },
+    "views": {
+      "sidewindowViewContainer": [
+        {
+          "id": "sidewindowStartView",
+          "name": "sidewindow - Start Here (Name)",
+          "icon": "$(broadcast)",
+          "contextualTitle": "sidewindow - Start (Contextual Title)"
+        },
+        {
+          "id": "sidewindowOtherView",
+          "name": "sidewindow - Other View (Name)",
+          "icon": "$(dashboard)",
+          "contextualTitle": "sidewindow - Other View (Contextual Title)"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "sidewindowStartView",
+        "contents": "Welcome to sidewindow! \nClick to begin connection: \n[Connect to Server](command:sidewindow.startConnection)"
+      },
+      {
+        "view": "sidewindowOtherView",
+        "contents": "No status"
+      }
+    ],
+    "commands": [
+      {
+        "command": "sidewindow.startConnection",
+        "title": "sidewindow - Start Connection"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^8.0.4",
+    "@types/node": "^12.11.7",
+    "@types/vscode": "^1.56.0",
+    "@typescript-eslint/eslint-plugin": "^4.14.1",
+    "@typescript-eslint/parser": "^4.14.1",
+    "eslint": "^7.19.0",
+    "glob": "^7.1.6",
+    "mocha": "^8.2.1",
+    "typescript": "^4.1.3",
+    "vscode-test": "^1.5.0"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.1.1"
+  }
+}
