@@ -11,7 +11,10 @@
   ],
   "activationEvents": [
     "onCommand:sidewindow.startConnection",
-    "onCommand:sidewindow.sendMessage"
+    "onCommand:sidewindow.sendMessage",
+    "onCommand:sidewindow.shareFile",
+    "onCommand:sidewindow.disconnect",
+    "onCommand:sidewindow.showRoomCode"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -58,6 +61,18 @@
       {
         "command": "sidewindow.sendMessage",
         "title": "sidewindow - Send Message"
+      },
+      {
+        "command": "sidewindow.shareFile",
+        "title": "sidewindow - Share Currently Opened File"
+      },
+      {
+        "command": "sidewindow.disconnect",
+        "title": "sidewindow - Disconnect from server"
+      },
+      {
+        "command": "sidewindow.showRoomCode",
+        "title": "sidewindow - Show Room Code"
       }
     ]
   },
