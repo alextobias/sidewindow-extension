@@ -10,7 +10,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:sidewindow.startConnection"
+    "onCommand:sidewindow.startConnection",
+    "onCommand:sidewindow.sendMessage"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -53,6 +54,10 @@
       {
         "command": "sidewindow.startConnection",
         "title": "sidewindow - Start Connection"
+      },
+      {
+        "command": "sidewindow.sendMessage",
+        "title": "sidewindow - Send Message"
       }
     ]
   },

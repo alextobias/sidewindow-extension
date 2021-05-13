@@ -31,8 +31,8 @@ export function activate(context: vscode.ExtensionContext) {
 		const showInputBoxOptions = {
 			ignoreFocusOut: true,
 			password: false,
-			placeHolder: "localhost:3000",
-			value: "https://localhost:5000",
+			placeHolder: "https://sidewindow.herokuapp.com",
+			value: "https://sidewindow.herokuapp.com",
 			prompt: "server to connect to",
 			valueSelection: undefined
 		}
@@ -67,13 +67,54 @@ export function activate(context: vscode.ExtensionContext) {
 					console.log(`> socket: connected to server at ${connectionAddr})`);
 					console.log(`> socket: this socket id is ${extension_socket.id}`)
 				})
+
+				extension_socket.onAny((ev, arg) => {
+					console.log(`> socket: received event ${ev} with args ${arg}`);
+				})
+
+				// the "source:event" format will be used in the future
+				extension_socket.on("server:msg", (msg) => {
+					console.log(`> socket: received message '${msg} from server`);
+				})
+
+				// for now, we are keeping the "source-event" format for compatibility
+				extension_socket.on("server-msg", (msg) => {
+					console.log(`> socket: received message '${msg} from server`);
+				})
 			}
 		})
 	})
 
+	let sendMessageCommand = vscode.commands.registerCommand('sidewindow.sendMessage', () => {
+		console.log("> Called sendMessageCommand");
+		console.log("> sendMessageCommand: Now prompting user for input")
+
+		const showInputBoxOptions = {
+			ignoreFocusOut: true,
+			password: false,
+			placeHolder: "Hi! This is a message from the server.",
+			prompt: "Message to send to clients",
+			value: undefined,
+			valueSelection: undefined
+		}
+		const messageInput = vscode.window.showInputBox(showInputBoxOptions);
+		messageInput.then(
+			(retstring) => {
+				console.log(`> sendMessageCommand: user input '${retstring}'`);
+				// io_server.emit("server-msg", retstring);
+				// vscode.window.showInformationMessage(`Sent message '${retstring}' to connected clients`);
+			}
+		);
+	})
+
+
+		
+
 
 
 	context.subscriptions.push(disposable);
+	context.subscriptions.push(startConnectionCommand);
+
 }
 
 // this method is called when your extension is deactivated
