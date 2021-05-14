@@ -5,8 +5,8 @@ import * as vscode from 'vscode';
 // importing io module from socketio client
 import { io, Socket } from 'socket.io-client';
 
-let extension_socket: Socket;
-let room_id: String
+let statusBarItem: vscode.StatusBarItem;
+
 let extensionSocket: Socket;
 let roomId: string;
 // let main_socket: undefined | Socket;
@@ -269,6 +269,26 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disconnectCommand);
 	context.subscriptions.push(showRoomCodeCommand);
 
+}
+
+function initializeStatusBarItem(message: string) {
+	console.log(`> statusBarItem: initializing with text ${message}`);
+	statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+	statusBarItem.text = `sidewindow: ${message}`;
+	statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+	statusBarItem.color = vscode.ThemeColor;
+	statusBarItem.show();
+}
+
+function changeStatusBarItem(message: string) {
+	console.log(`> statusBarItem: changing message to ${message}`);
+	statusBarItem.text = `sidewindow: ${message}`;
+	statusBarItem.show();
+}
+
+function disposeStatusBarItem() {
+	console.log(`> statusBarItem: disposing.`);
+	statusBarItem.dispose();
 }
 
 // this method is called when your extension is deactivated
