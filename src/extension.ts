@@ -4,11 +4,15 @@ import * as vscode from 'vscode';
 
 // importing io module from socketio client
 import { io, Socket } from 'socket.io-client';
+import { glob } from 'glob';
 
 let statusBarItem: vscode.StatusBarItem;
 
 let extensionSocket: Socket;
 let roomId: string;
+
+// let activeDocument: vscode.TextDocument;
+let globalActiveDocument: vscode.TextDocument;
 // let main_socket: undefined | Socket;
 
 // this method is called when your extension is activated
@@ -102,7 +106,7 @@ export function activate(context: vscode.ExtensionContext) {
 					});
 
 					extensionSocket.onAny((ev, arg) => {
-						console.log(`> socket: received event ${ev} with args ${arg}`);
+						console.log(`> socket: [GENERAL] received event ${ev} with args ${arg}`);
 					});
 
 					// the "source:event" format will be used in the future
@@ -161,8 +165,13 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showErrorMessage(`sidewindow: No active editor to share.`);
 			return;
 		}
+
 		// access active document and filepath
-		const activeDocument = activeTextEditor.document;
+		// if we previously had an active document, this should get changed to the current active document
+		let activeDocument = activeTextEditor.document;
+
+		globalActiveDocument = activeDocument;
+
 		const filepath = activeTextEditor.document.uri.path;
 
 		// TODO: update port status bar item
@@ -177,19 +186,35 @@ export function activate(context: vscode.ExtensionContext) {
 		extensionSocket.emit("extension:edits", documentText);
 
 		// set up event listener for when we make a change
-		console.log(`> shareFileCommand: attaching onDidChangeTextDocument event`);
-		vscode.workspace.onDidChangeTextDocument( changeEvent => {
+
+		// function changeListenerCallback is passed into the "onDidChangeTextDocument"
+		function changeListenerCallback(changeEvent: vscode.TextDocumentChangeEvent) {
 			// this event fires every time any document is changed, so we should check the document that got changed
-			console.log(`> extension: Got 'onDidChangeTextDocument' event`);
-			if(changeEvent.document === activeDocument) {
-				console.log(`> extension: changed document matches selected shared activeDocument.`);
-				let text = activeDocument.getText();
+			console.log(`> changeListenerCallback: Got 'onDidChangeTextDocument' event`);
+			if(changeEvent.document === globalActiveDocument) {
+				console.log(`> changeListenerCallback: changed document matches globalActiveDocument ${globalActiveDocument.uri.fsPath}.`);
+				let text = globalActiveDocument.getText();
 				extensionSocket.emit("extension:edits", text);
 			}
 			else {
-				console.log(`> extension: changed document doesn't matches shared activeDocument.`);
+				console.log(`> extension: changed document doesn't matches shared globalActiveDocument.`);
 			}
-		});
+		}
+
+		console.log(`> shareFileCommand: attaching onDidChangeTextDocument event`);
+		let changeListenerEvent = vscode.workspace.onDidChangeTextDocument(changeListenerCallback)
+		// const changeListenerEvent = vscode.workspace.onDidChangeTextDocument( changeEvent => {
+		// 	// this event fires every time any document is changed, so we should check the document that got changed
+		// 	console.log(`> extension: Got 'onDidChangeTextDocument' event`);
+		// 	if(changeEvent.document === globalActiveDocument) {
+		// 		console.log(`> extension: changed document matches globalActiveDocument ${globalActiveDocument.uri.fsPath}.`);
+		// 		let text = globalActiveDocument.getText();
+		// 		extensionSocket.emit("extension:edits", text);
+		// 	}
+		// 	else {
+		// 		console.log(`> extension: changed document doesn't matches shared globalActiveDocument.`);
+		// 	}
+		// });
 
 		// set up event listener for browser edits
 		console.log(`> shareFileCommand: attaching browser:edits event`);
@@ -198,10 +223,10 @@ export function activate(context: vscode.ExtensionContext) {
 			// there's probably a better way to do this, but...
 			// need to access the properties of the document and its lines to get start and end positions
 			// then apply an edit to that range which replaces the document with the new received text
-			let lineCount = activeDocument.lineCount;
+			let lineCount = globalActiveDocument.lineCount;
 			// console.log("Document linecount: " + lineCount)
-			let firstLine = activeDocument.lineAt(0);
-			let lastLine = activeDocument.lineAt(lineCount - 1);
+			let firstLine = globalActiveDocument.lineAt(0);
+			let lastLine = globalActiveDocument.lineAt(lineCount - 1);
 			// console.log("Document first line:" + firstLine.text)
 			// console.log("Document last line:" + lastLine.text)
 			let firstLineRange = firstLine.range;
@@ -212,10 +237,24 @@ export function activate(context: vscode.ExtensionContext) {
 			// console.log("Delete range: " + deleteRange.start + " to " + deleteRange.end)
 			// need to re-do activetexteditor if closed
 
+			// ON EACH CHANGE RECEIVED, IT TURNS OUT WE RE-BROADCAST THAT CHANGE
+			// to mitigate this, I will temporarily change globalActiveDocument so that it 
+			// is 'null' once we receive an event, and then is reset when we've finished receiving an event
+			console.log("> disposing changeListenerEvent before applying browser edits")
+			changeListenerEvent.dispose()
+			console.log(`> changeListenerEvent disposed, it is now ${changeListenerEvent}`)
+
 			// try this; it's a workspace edit
 			let newEdit = new vscode.WorkspaceEdit();
-			newEdit.replace(activeDocument.uri, deleteRange, msg);
-			vscode.workspace.applyEdit(newEdit);
+			newEdit.replace(globalActiveDocument.uri, deleteRange, msg);
+			console.log("> before applying edit")
+			vscode.workspace.applyEdit(newEdit).then( () => {
+				console.log("> edit applied.")
+				// reapply the ondidchange callback
+				console.log("> reattaching changeListenerCallback after applying browser edits")
+				changeListenerEvent = vscode.workspace.onDidChangeTextDocument(changeListenerCallback)
+				console.log(`> reattached changeListenerEvent, it is now ${changeListenerEvent}`)
+			})
 
 			// old way used the activeTextEditor.edit() method
 			// but the "activeTextEditor" closes upon changing tabs to another document
