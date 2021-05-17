@@ -244,7 +244,8 @@ export function activate(context: vscode.ExtensionContext) {
 			changeListenerEvent.dispose()
 			console.log(`> changeListenerEvent disposed, it is now ${changeListenerEvent}`)
 
-			// try this; it's a workspace edit
+			// TODO: this is fishy, and I think it's creating more problems
+			// figure out how to stop multi-triggering events when we receive messages from browser
 			let newEdit = new vscode.WorkspaceEdit();
 			newEdit.replace(globalActiveDocument.uri, deleteRange, msg);
 			console.log("> before applying edit")
