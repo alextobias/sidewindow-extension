@@ -11,9 +11,13 @@ let statusBarItem: vscode.StatusBarItem;
 let extensionSocket: Socket;
 let roomId: string;
 
+let globalLockIsHeld: boolean;
+
 // let activeDocument: vscode.TextDocument;
-let globalActiveDocument: vscode.TextDocument;
+// let globalActiveDocument: vscode.TextDocument;
+let globalActiveDocument: vscode.TextDocument | null;
 // let main_socket: undefined | Socket;
+let globalChangeEventListener: vscode.Disposable;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -107,9 +111,9 @@ export function activate(context: vscode.ExtensionContext) {
 						changeStatusBarItem("disconnected");
 					});
 
-					extensionSocket.onAny((ev, arg) => {
-						console.log(`> socket: [GENERAL] received event ${ev} with args ${arg}`);
-					});
+					// extensionSocket.onAny((ev, arg) => {
+					// 	console.log(`> socket: [GENERAL] received event ${ev} with args ${arg}`);
+					// });
 
 					// the "source:event" format will be used in the future
 					extensionSocket.on("browser:msg", (msg) => {
@@ -198,7 +202,8 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		console.log(`> shareFileCommand: attaching onDidChangeTextDocument event`);
-		let changeListenerEvent = vscode.workspace.onDidChangeTextDocument(changeListenerCallback);
+
+		globalChangeEventListener = vscode.workspace.onDidChangeTextDocument(changeListenerCallback);
 		// const changeListenerEvent = vscode.workspace.onDidChangeTextDocument( changeEvent => {
 		// 	// this event fires every time any document is changed, so we should check the document that got changed
 		// 	console.log(`> extension: Got 'onDidChangeTextDocument' event`);
@@ -215,10 +220,14 @@ export function activate(context: vscode.ExtensionContext) {
 		// set up event listener for browser edits
 		console.log(`> shareFileCommand: attaching browser:edits event`);
 		extensionSocket.on("browser:edits", (msg) => {
-			console.log(`> socket: got [browser:edits] event aka new content from a browser client`);
+			console.log(`> socket: [browser:edits]: ${msg}`);
 			// there's probably a better way to do this, but...
 			// need to access the properties of the document and its lines to get start and end positions
 			// then apply an edit to that range which replaces the document with the new received text
+			if(globalActiveDocument === null) {
+				console.log(`> ERROR: globalActiveDocument currently NULL.`)
+				return;
+			}
 			let lineCount = globalActiveDocument.lineCount;
 			// console.log("Document linecount: " + lineCount)
 			let firstLine = globalActiveDocument.lineAt(0);
@@ -233,25 +242,29 @@ export function activate(context: vscode.ExtensionContext) {
 			// console.log("Delete range: " + deleteRange.start + " to " + deleteRange.end)
 			// need to re-do activetexteditor if closed
 
-			// ON EACH CHANGE RECEIVED, IT TURNS OUT WE RE-BROADCAST THAT CHANGE
-			// to mitigate this, I will temporarily change globalActiveDocument so that it 
-			// is 'null' once we receive an event, and then is reset when we've finished receiving an event
-			console.log("> disposing changeListenerEvent before applying browser edits")
-			changeListenerEvent.dispose()
-			console.log(`> changeListenerEvent disposed, it is now ${changeListenerEvent}`)
+			// making globalActiveDocument NULL until we finish applying the edit
+			globalActiveDocument = null;
+
+			// disposing globalChangeEventListener
+			// console.log("> disposing changeListenerEvent before applying browser edits");
+			// globalChangeEventListener.dispose();
+			// console.log(`> changeListenerEvent disposed, it is now ${changeListenerEvent}`);
 
 			// TODO: this is fishy, and I think it's creating more problems
 			// figure out how to stop multi-triggering events when we receive messages from browser
 			let newEdit = new vscode.WorkspaceEdit();
-			newEdit.replace(globalActiveDocument.uri, deleteRange, msg);
-			console.log("> before applying edit")
+			newEdit.replace(activeDocument.uri, deleteRange, msg);
+			console.log("> before applying edit");
 			vscode.workspace.applyEdit(newEdit).then( () => {
-				console.log("> edit applied.")
-				// reapply the ondidchange callback
-				console.log("> reattaching changeListenerCallback after applying browser edits")
-				changeListenerEvent = vscode.workspace.onDidChangeTextDocument(changeListenerCallback)
-				console.log(`> reattached changeListenerEvent, it is now ${changeListenerEvent}`)
-			})
+				console.log("> edit applied, reinstating global active doc");
+				// reinstate globalActiveDocument
+				globalActiveDocument = activeDocument;
+
+				// // reapply the ondidchange callback
+				// console.log("> reattaching changeListenerCallback after applying browser edits");
+				// globalChangeEventListener = vscode.workspace.onDidChangeTextDocument(changeListenerCallback);
+				// console.log(`> reattached changeListenerEvent, it is now ${globalChangeEventListener}`);
+			});
 
 			// old way used the activeTextEditor.edit() method
 			// but the "activeTextEditor" closes upon changing tabs to another document
@@ -296,7 +309,6 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 	});
-			
 
 	context.subscriptions.push(disposable);
 	context.subscriptions.push(startConnectionCommand);
