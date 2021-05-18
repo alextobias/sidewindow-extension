@@ -132,7 +132,6 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showErrorMessage(`sidewindow: No socket currently active.`, {modal: false});
 			return;
 		}
-
 		console.log("> sendMessageCommand: Now prompting user for input");
 
 		const showInputBoxOptions = {
@@ -169,7 +168,7 @@ export function activate(context: vscode.ExtensionContext) {
 		// access active document and filepath
 		// if we previously had an active document, this should get changed to the current active document
 		let activeDocument = activeTextEditor.document;
-
+		// make the globalActiveDocument this
 		globalActiveDocument = activeDocument;
 
 		const filepath = activeTextEditor.document.uri.path;
@@ -204,18 +203,6 @@ export function activate(context: vscode.ExtensionContext) {
 		console.log(`> shareFileCommand: attaching onDidChangeTextDocument event`);
 
 		globalChangeEventListener = vscode.workspace.onDidChangeTextDocument(changeListenerCallback);
-		// const changeListenerEvent = vscode.workspace.onDidChangeTextDocument( changeEvent => {
-		// 	// this event fires every time any document is changed, so we should check the document that got changed
-		// 	console.log(`> extension: Got 'onDidChangeTextDocument' event`);
-		// 	if(changeEvent.document === globalActiveDocument) {
-		// 		console.log(`> extension: changed document matches globalActiveDocument ${globalActiveDocument.uri.fsPath}.`);
-		// 		let text = globalActiveDocument.getText();
-		// 		extensionSocket.emit("extension:edits", text);
-		// 	}
-		// 	else {
-		// 		console.log(`> extension: changed document doesn't matches shared globalActiveDocument.`);
-		// 	}
-		// });
 
 		// set up event listener for browser edits
 		console.log(`> shareFileCommand: attaching browser:edits event`);
@@ -242,45 +229,24 @@ export function activate(context: vscode.ExtensionContext) {
 			// console.log("Delete range: " + deleteRange.start + " to " + deleteRange.end)
 			// need to re-do activetexteditor if closed
 
-			// making globalActiveDocument NULL until we finish applying the edit
+			// if our globalActiveDocument has changed (i.e. we called share on another file, need to preseve the current 'globalActiveDocument' somehow
+			const currentGlobalActiveDocument = globalActiveDocument;
+
+			// make globalActiveDocument NULL until we finish applying the edit
+			// this is so that the applied changes don't trigger the 'onDidGetDocumentChange' event
 			globalActiveDocument = null;
 
-			// disposing globalChangeEventListener
-			// console.log("> disposing changeListenerEvent before applying browser edits");
-			// globalChangeEventListener.dispose();
-			// console.log(`> changeListenerEvent disposed, it is now ${changeListenerEvent}`);
 
-			// TODO: this is fishy, and I think it's creating more problems
-			// figure out how to stop multi-triggering events when we receive messages from browser
+			// instantiate and apply edit
 			let newEdit = new vscode.WorkspaceEdit();
-			newEdit.replace(activeDocument.uri, deleteRange, msg);
-			console.log("> before applying edit");
+			newEdit.replace(currentGlobalActiveDocument.uri, deleteRange, msg);
+			// after applying edit (in the 'then' callback, reinstate globalActiveDocument)
 			vscode.workspace.applyEdit(newEdit).then( () => {
 				console.log("> edit applied, reinstating global active doc");
 				// reinstate globalActiveDocument
-				globalActiveDocument = activeDocument;
-
-				// // reapply the ondidchange callback
-				// console.log("> reattaching changeListenerCallback after applying browser edits");
-				// globalChangeEventListener = vscode.workspace.onDidChangeTextDocument(changeListenerCallback);
-				// console.log(`> reattached changeListenerEvent, it is now ${globalChangeEventListener}`);
+				globalActiveDocument = currentGlobalActiveDocument;
 			});
 
-			// old way used the activeTextEditor.edit() method
-			// but the "activeTextEditor" closes upon changing tabs to another document
-			// it works when emitting changes since 'activeDocument' is preserved when changing tabs
-			// so when there's a change in the extension, we check that the change is coming from activeDocument
-			// but when we receive changes, we apply them to the activeTextEditor, which stops existing if we changed tabs
-
-			// activeTextEditor.edit(editBuilder => {
-			// 	editBuilder.delete(deleteRange)
-			// 	editBuilder.insert(firstLineRange.start, msg)
-			// 	// editBuilder deletes only work with ranges or selections
-			// 	// so I have to give it the whole range of the document
-			// 	// get document linecount
-			// 	// let deleteRange = new Range(0,0, docum)
-			// 	// editBuilder.delete()
-			// })
 		});
 	});
 
