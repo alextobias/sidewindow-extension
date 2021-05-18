@@ -41,8 +41,10 @@ export function activate(context: vscode.ExtensionContext) {
 		const showInputBoxOptions = {
 			ignoreFocusOut: true,
 			password: false,
-			placeHolder: "https://sidewindow.herokuapp.com",
-			value: "https://sidewindow.herokuapp.com",
+			// placeHolder: "https://sidewindow.herokuapp.com",
+			// value: "https://sidewindow.herokuapp.com",
+			placeHolder: "http://localhost:5000",
+			value: "http://localhost:5000",
 			prompt: "server to connect to",
 			valueSelection: undefined
 		};
@@ -114,12 +116,6 @@ export function activate(context: vscode.ExtensionContext) {
 						console.log(`> socket: received message '${msg} from a browser`);
 						vscode.window.showInformationMessage(`Received message: ${msg}`);
 					});
-
-					// for now, we are keeping the "source-event" format for compatibility
-					extensionSocket.on("server-msg", (msg) => {
-						console.log(`> socket: received message '${msg} from server`);
-					});
-
 				}
 			}
 		});
@@ -202,7 +198,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		console.log(`> shareFileCommand: attaching onDidChangeTextDocument event`);
-		let changeListenerEvent = vscode.workspace.onDidChangeTextDocument(changeListenerCallback)
+		let changeListenerEvent = vscode.workspace.onDidChangeTextDocument(changeListenerCallback);
 		// const changeListenerEvent = vscode.workspace.onDidChangeTextDocument( changeEvent => {
 		// 	// this event fires every time any document is changed, so we should check the document that got changed
 		// 	console.log(`> extension: Got 'onDidChangeTextDocument' event`);
