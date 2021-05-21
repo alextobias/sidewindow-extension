@@ -46,7 +46,7 @@
     "viewsWelcome": [
       {
         "view": "sidewindowStartView",
-        "contents": "Welcome to sidewindow! \nClick to begin connection: \n[Connect to Server](command:sidewindow.startConnection)"
+        "contents": "Welcome to sidewindow! \nClick to begin connection and create a room: \n[Connect to Server](command:sidewindow.startConnection) \n Share currently opened file (click again if you want to share a different file): \n[Share currently open file](command:sidewindow.shareFile) \n Once you're connected, use the [SideWindow Client](https://sidewindow.herokuapp.com) on another device to view and edit!\n Use the following button to disconnect:\n[Disconnect](command:sidewindow.disconnect)"
       },
       {
         "view": "sidewindowOtherView",
