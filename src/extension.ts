@@ -16,7 +16,6 @@ let globalLockIsHeld: boolean;
 // let activeDocument: vscode.TextDocument;
 // let globalActiveDocument: vscode.TextDocument;
 let globalActiveDocument: vscode.TextDocument | null;
-// let main_socket: undefined | Socket;
 let globalChangeEventListener: vscode.Disposable;
 
 // this method is called when your extension is activated
@@ -40,7 +39,33 @@ export function activate(context: vscode.ExtensionContext) {
 	let startConnectionCommand = vscode.commands.registerCommand('sidewindow.startConnection', () => {
 		console.log("> Called startConnectionCommand");
 		// this will be taken away in production, since we will only be connecting to my server
-		console.log("> startConnectionCommand: Now prompting user for input");
+
+		// some complicated logic here:
+		// if the socket is undefined, that means we've never connected before, so it's valid to form a new connection
+		// if the socket is already defined, we have to check if it is connected or not, using the socket.connected property
+		if(extensionSocket !== undefined) {
+			// if we're here, that means the socket exists and has at some point been connected
+			// check if it is currently connected
+			// my thinking: if it's been connected before, then roomId should be defined
+			console.log(`> startConnectionCommand: socket is already active.`);
+			if(roomId === undefined) {
+				console.log(`> startConnectionCommand: socket is/has existed but roomId is undefined!`);
+			} else {
+				console.log(`> startConnectionCommand: socket is/has existed and roomId is ${roomId}`);
+			}
+
+			if(extensionSocket.connected) {
+				console.log(`> startConnectionCommand: socket is active and is currently connected.`);
+				vscode.window.showInformationMessage("sidewindow: You are already connected.");
+				return;
+			}
+			else {
+				// in this case, it is not connected
+				// so we can go ahead and redo the connection, and assign extensionSocket to it
+				console.log(`> startConnectionCommand: socket exists but is not currently connected.`);
+				// so we can continue
+			}
+		}
 
 		const showInputBoxOptions = {
 			ignoreFocusOut: true,
@@ -52,6 +77,7 @@ export function activate(context: vscode.ExtensionContext) {
 			prompt: "server to connect to",
 			valueSelection: undefined
 		};
+		console.log("> startConnectionCommand: Now prompting user for input");
 		const connectionAddrInput = vscode.window.showInputBox(showInputBoxOptions);
 		connectionAddrInput.then((connectionAddr) => {
 			// determine what to do with input
@@ -78,7 +104,6 @@ export function activate(context: vscode.ExtensionContext) {
 				};
 	
 				extensionSocket = io(connectionAddr, extensionSocketOptions);
-				// main_socket = extension_socket;
 
 				if(extensionSocket === undefined) {
 					console.log(`> startConnectionCommand: ERROR - connection failed mysteriously!`);
@@ -129,8 +154,14 @@ export function activate(context: vscode.ExtensionContext) {
 		console.log("> Called sendMessageCommand");
 		if(extensionSocket === undefined) {
 			console.log("> sendMessageCommand: No socket currently active, returning.");
-			vscode.window.showErrorMessage(`sidewindow: No socket currently active.`, {modal: false});
+			vscode.window.showErrorMessage(`sidewindow: No connection currently active.`, {modal: false});
 			return;
+		} else {
+			if(!extensionSocket.connected) {
+				console.log("> sendMessageCommand: Socket exists but is not connected");
+				vscode.window.showErrorMessage(`sidewindow: No connection currently active.`, {modal: false});
+				return;
+			}
 		}
 		console.log("> sendMessageCommand: Now prompting user for input");
 
@@ -157,6 +188,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const activeTextEditor = vscode.window.activeTextEditor;
 		if(extensionSocket === undefined) {
 			console.log(`> shareFileCommand: No socket currently active. Returning.`);
+			vscode.window.showErrorMessage(`sidewindow: No connection currently active.`);
 			return;
 		}
 		else if(activeTextEditor === undefined) {
@@ -212,7 +244,7 @@ export function activate(context: vscode.ExtensionContext) {
 			// need to access the properties of the document and its lines to get start and end positions
 			// then apply an edit to that range which replaces the document with the new received text
 			if(globalActiveDocument === null) {
-				console.log(`> ERROR: globalActiveDocument currently NULL.`)
+				console.log(`> ERROR: globalActiveDocument currently NULL.`);
 				return;
 			}
 			let lineCount = globalActiveDocument.lineCount;
@@ -254,12 +286,13 @@ export function activate(context: vscode.ExtensionContext) {
 		console.log(`> Called disconnectCommand`);
 		if(extensionSocket === undefined) {
 			console.log(`> disconnectCommand: No socket currently active. Returning.`);
-			vscode.window.showErrorMessage(`sidewindow: No socket currently active.`, {modal: false});
+			vscode.window.showErrorMessage(`sidewindow: No connection currently active.`, {modal: false});
 			return;
 		}
 		console.log(`> disconnectCommand: Now disconnecting socket...`);
 		extensionSocket.disconnect();
 		console.log(`> disconnectCommand: Socket disconnected.`);
+		disposeStatusBarItem();
 		// extension_socket = undefined;
 	});
 
@@ -267,7 +300,7 @@ export function activate(context: vscode.ExtensionContext) {
 		console.log(`> Called showRoomCodeCommand`);
 		if(roomId === undefined) {
 			console.log(`> showRoomCommand: No socket currently active. Returning.`);
-			vscode.window.showErrorMessage(`sidewindow: No socket currently active.`, {modal: false});
+			vscode.window.showErrorMessage(`sidewindow: No connection currently active.`, {modal: false});
 			return;
 		} else {
 			console.log(`> showRoomCodeCommand: showing room code ${roomId} to user.`);
