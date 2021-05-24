@@ -9,117 +9,146 @@ let extensionSocket: Socket;
 
 import * as statusbar from './statusbar';
 
+async function connectAndShare() {
+    console.log(`> called connectAndShare`);
+    try {
+        const connectionReturn = await startConnection();
+        console.log(`> startConnection resolved: ${connectionReturn}`);
+        console.log(`> Now sharing file...`);
+        shareFile();
+    } catch (e) {
+        console.log(`> startConnection rejected: ${e}`);
+    }
+}
+
 function startConnection() {
     console.log("> Called startConnectionCommand");
     // this will be taken away in production, since we will only be connecting to my server
 
-    // some complicated logic here:
-    // if the socket is undefined, that means we've never connected before, so it's valid to form a new connection
-    // if the socket is already defined, we have to check if it is connected or not, using the socket.connected property
-    if(extensionSocket !== undefined) {
-        // if we're here, that means the socket exists and has at some point been connected
-        // check if it is currently connected
-        // my thinking: if it's been connected before, then roomId should be defined
-        console.log(`> startConnectionCommand: socket is already active.`);
-        if(roomId === undefined) {
-            console.log(`> startConnectionCommand: socket is/has existed but roomId is undefined!`);
-        } else {
-            console.log(`> startConnectionCommand: socket is/has existed and roomId is ${roomId}`);
-        }
+    return new Promise((resolve, reject) => {
+        // some important logic here:
+        // if the socket is undefined, that means we've never connected before, so it's valid to form a new connection
+        // if the socket is already defined, we have to check if it is connected or not, using the socket.connected property
+        if(extensionSocket !== undefined) {
+            // if we're here, that means the socket exists and has at some point been connected
+            // check if it is currently connected
+            // my thinking: if it's been connected before, then roomId should be defined
+            console.log(`> startConnectionCommand: socket is already active.`);
+            // TODO: not sure what to do about this logic about roomId
+            if(roomId === undefined) {
+                console.log(`> startConnectionCommand: socket is/has existed but roomId is undefined!`);
+            } else {
+                console.log(`> startConnectionCommand: socket is/has existed and roomId is ${roomId}`);
+            }
 
-        if(extensionSocket.connected) {
-            console.log(`> startConnectionCommand: socket is active and is currently connected.`);
-            vscode.window.showInformationMessage("sidewindow: You are already connected.");
-            return;
-        }
-        else {
-            // in this case, it is not connected
-            // so we can go ahead and redo the connection, and assign extensionSocket to it
-            console.log(`> startConnectionCommand: socket exists but is not currently connected.`);
-            // so we can continue
-        }
-    }
-
-    const showInputBoxOptions = {
-        ignoreFocusOut: true,
-        password: false,
-        // placeHolder: "https://sidewindow.herokuapp.com",
-        // value: "https://sidewindow.herokuapp.com",
-        placeHolder: "http://localhost:5000",
-        value: "http://localhost:5000",
-        prompt: "server to connect to",
-        valueSelection: undefined
-    };
-    console.log("> startConnectionCommand: Now prompting user for input");
-    const connectionAddrInput = vscode.window.showInputBox(showInputBoxOptions);
-    connectionAddrInput.then((connectionAddr) => {
-        // determine what to do with input
-        // again, this will not be available in production
-        if(connectionAddr === undefined) {
-            console.log("> startConnectionCommand: input box was closed.");
-            return;
-        }
-        else if(connectionAddr === "") {
-            console.log("> startConnectionCommand: empty connectionAddr. Returning.");
-            return;
-        }
-        else {
-            console.log(`> startConnectionCommand: attempting to connect to ${connectionAddr}`);
-
-            const extensionSocketOptions = {
-                reconnection: true,
-                reconnectionDelay: 1000,
-                reconnectionDelayMax: 5000,
-                timeout: 20000,
-                query: {
-                    type: "extension",
-                }
-            };
-
-            extensionSocket = io(connectionAddr, extensionSocketOptions);
-
-            if(extensionSocket === undefined) {
-                console.log(`> startConnectionCommand: ERROR - connection failed mysteriously!`);
-                return;
-            } 
+            if(extensionSocket.connected) {
+                console.log(`> startConnectionCommand: socket is active and is currently connected.`);
+                vscode.window.showInformationMessage("sidewindow: You are already connected.");
+                reject("already connected!");
+            }
             else {
-
-                console.log(`> startConnectionCommand: DEBUG - code is reached`);
-                // get room code from extension
-
-                extensionSocket.on("connect", () => {
-                    console.log(`> socket: connected to server at ${connectionAddr})`);
-                    console.log(`> socket: this socket id is ${extensionSocket.id}`);
-                    roomId = extensionSocket.id.slice(0, 4);
-                    console.log(`> startConnectionCommand: room_id is ${roomId}`);
-                    console.log(`> socket: connected to room ${roomId}`);
-                    vscode.window.showInformationMessage(`sidewindow: Connected to room ${roomId}`, {modal: false});
-
-                    // TODO: update status bar item
-                    statusbar.initializeStatusBarItem(roomId);
-                });
-
-                extensionSocket.on("disconnect", (msg) => {
-                    console.log(`> socket: disconnect event received! We've been disconnected`);
-                    console.log(`> socket: disconnect message is ${msg}`);
-                    vscode.window.showInformationMessage(`sidewindow: Disconnected.`, {modal: false});
-                    extensionSocket.disconnect();
-
-                    // disposeStatusBarItem();
-                    statusbar.changeStatusBarItem("disconnected");
-                });
-
-                // extensionSocket.onAny((ev, arg) => {
-                // 	console.log(`> socket: [GENERAL] received event ${ev} with args ${arg}`);
-                // });
-
-                // the "source:event" format will be used in the future
-                extensionSocket.on("browser:msg", (msg) => {
-                    console.log(`> socket: received message '${msg} from a browser`);
-                    vscode.window.showInformationMessage(`Received message: ${msg}`);
-                });
+                // in this case, it is not connected so we can go ahead and redo the connection, and assign extensionSocket to it
+                console.log(`> startConnectionCommand: socket exists but is not currently connected.`);
+                // so we can continue
             }
         }
+        // if we've arrived here, then either:
+        // - extensionSocket is undefined, i.e. never connected before
+        // - or extensionSocket has been defined but is currently not connected
+
+        const showInputBoxOptions = {
+            ignoreFocusOut: true,
+            password: false,
+            // placeHolder: "https://sidewindow.herokuapp.com",
+            // value: "https://sidewindow.herokuapp.com",
+            placeHolder: "http://localhost:5000",
+            value: "http://localhost:5000",
+            prompt: "server to connect to",
+            valueSelection: undefined
+        };
+
+        console.log("> startConnectionCommand: Now prompting user for input");
+        const connectionAddrInput = vscode.window.showInputBox(showInputBoxOptions);
+
+        connectionAddrInput.then((connectionAddr) => {
+            // determine what to do with input
+            // again, this will not be available in production
+            if(connectionAddr === undefined) {
+                console.log("> startConnectionCommand: input box was closed.");
+                return;
+            }
+            else if(connectionAddr === "") {
+                console.log("> startConnectionCommand: empty connectionAddr. Returning.");
+                return;
+            }
+            else {
+                console.log(`> startConnectionCommand: attempting to connect to ${connectionAddr}`);
+
+                const extensionSocketOptions = {
+                    reconnection: true,
+                    reconnectionDelay: 1000,
+                    reconnectionDelayMax: 5000,
+                    timeout: 20000,
+                    query: {
+                        type: "extension",
+                    }
+                };
+
+                extensionSocket = io(connectionAddr, extensionSocketOptions);
+
+                if(extensionSocket === undefined) {
+                    console.log(`> startConnectionCommand: ERROR - connection failed mysteriously!`);
+                    return;
+                } 
+                else {
+
+                    console.log(`> startConnectionCommand: DEBUG - code is reached`);
+                    // get room code from extension
+
+                    extensionSocket.on("connect_error", (error) => {
+                        reject(`REJECT - Error connecting!: ${error}`);
+                        console.log(`> socket: received a connection error: ${error}`);
+                        console.log(`> Now disconnecting...`);
+                        vscode.window.showErrorMessage("sidewindow: Error connecting to server.");
+                        extensionSocket.disconnect();
+                    });
+
+                    extensionSocket.on("connect", () => {
+                        console.log(`> socket: connected to server at ${connectionAddr})`);
+                        console.log(`> socket: this socket id is ${extensionSocket.id}`);
+                        roomId = extensionSocket.id.slice(0, 4);
+                        console.log(`> startConnectionCommand: room_id is ${roomId}`);
+                        console.log(`> socket: connected to room ${roomId}`);
+                        vscode.window.showInformationMessage(`sidewindow: Connected to room ${roomId}`, {modal: false});
+
+                        // TODO: update status bar item
+                        statusbar.initializeStatusBarItem(roomId);
+                        resolve("RESOLVE - connection ready!");
+                    });
+
+                    extensionSocket.on("disconnect", (msg) => {
+                        console.log(`> socket: disconnect event received! We've been disconnected`);
+                        console.log(`> socket: disconnect message is ${msg}`);
+                        vscode.window.showInformationMessage(`sidewindow: Disconnected.`, {modal: false});
+                        extensionSocket.disconnect();
+
+                        // disposeStatusBarItem();
+                        statusbar.changeStatusBarItem("disconnected");
+                    });
+
+                    // extensionSocket.onAny((ev, arg) => {
+                    // 	console.log(`> socket: [GENERAL] received event ${ev} with args ${arg}`);
+                    // });
+
+                    // the "source:event" format will be used in the future
+                    extensionSocket.on("browser:msg", (msg) => {
+                        console.log(`> socket: received message '${msg} from a browser`);
+                        vscode.window.showInformationMessage(`Received message: ${msg}`);
+                    });
+
+                }
+            }
+        });
     });
 }
 
@@ -283,4 +312,4 @@ function showRoomCode() {
 }
 
 
-export {startConnection, sendMessage, shareFile, disconnect, showRoomCode};
+export {connectAndShare, startConnection, sendMessage, shareFile, disconnect, showRoomCode};

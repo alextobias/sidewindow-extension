@@ -22,6 +22,8 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from SideWindow!');
 	});
 
+	let connectAndShareCommand = vscode.commands.registerCommand('sidewindow.connectAndShare', connection.connectAndShare);
+
 	let startConnectionCommand = vscode.commands.registerCommand('sidewindow.startConnection', connection.startConnection);
 
 	let sendMessageCommand = vscode.commands.registerCommand('sidewindow.sendMessage', connection.sendMessage);
