@@ -5,6 +5,7 @@ import { io, Socket } from 'socket.io-client';
 let roomId: string;
 let globalActiveDocument: vscode.TextDocument | null;
 let globalChangeEventListener: vscode.Disposable;
+let areEventListenersActive: boolean = false;
 let extensionSocket: Socket;
 
 import * as statusbar from './statusbar';
@@ -44,7 +45,8 @@ function startConnection() {
             if(extensionSocket.connected) {
                 console.log(`> startConnectionCommand: socket is active and is currently connected.`);
                 vscode.window.showInformationMessage("sidewindow: You are already connected.");
-                reject("already connected!");
+                resolve("already connected!");
+                return;
             }
             else {
                 // in this case, it is not connected so we can go ahead and redo the connection, and assign extensionSocket to it
@@ -129,11 +131,13 @@ function startConnection() {
                     extensionSocket.on("disconnect", (msg) => {
                         console.log(`> socket: disconnect event received! We've been disconnected`);
                         console.log(`> socket: disconnect message is ${msg}`);
-                        vscode.window.showInformationMessage(`sidewindow: Disconnected.`, {modal: false});
-                        extensionSocket.disconnect();
+                        vscode.window.showInformationMessage(`sidewindow: You have been disconnected. Reason: ${msg}.`, {modal: true});
 
+                        // let disconnect function handle the disconnection behaviour
+                        disconnect();
+                        // extensionSocket.disconnect();
                         // disposeStatusBarItem();
-                        statusbar.changeStatusBarItem("disconnected");
+                        // statusbar.changeStatusBarItem("disconnected");
                     });
 
                     // extensionSocket.onAny((ev, arg) => {
@@ -220,77 +224,93 @@ function shareFile() {
 
     // set up event listener for when we make a change
 
-    // function changeListenerCallback is passed into the "onDidChangeTextDocument"
-    function changeListenerCallback(changeEvent: vscode.TextDocumentChangeEvent) {
-        // this event fires every time any document is changed, so we should check the document that got changed
-        console.log(`> changeListenerCallback: Got 'onDidChangeTextDocument' event`);
-        if(changeEvent.document === globalActiveDocument) {
-            console.log(`> changeListenerCallback: changed document matches globalActiveDocument ${globalActiveDocument.uri.fsPath}.`);
-            let text = globalActiveDocument.getText();
-            extensionSocket.emit("extension:edits", text);
+    // basically, if the listener is not active, activate it and set up the listener
+    // but if it's already 'active', i.e. we've gone through this process
+    // then don't run this, which will set another listener
+    console.log(`> checking if event listeners have been activated yet`);
+    if(!areEventListenersActive) {
+        console.log(`> event listeners not activated yet, attaching events, setting areEventListenersActive to true`);
+
+        console.log(`> shareFileCommand: attaching onDidChangeTextDocument event`);
+
+        // function changeListenerCallback is passed into the "onDidChangeTextDocument"
+        function changeListenerCallback(changeEvent: vscode.TextDocumentChangeEvent) {
+            // this event fires every time any document is changed, so we should check the document that got changed
+            console.log(`> changeListenerCallback: Got 'onDidChangeTextDocument' event`);
+            if(changeEvent.document === globalActiveDocument) {
+                console.log(`> changeListenerCallback: changed document matches globalActiveDocument ${globalActiveDocument.uri.fsPath}.`);
+                let text = globalActiveDocument.getText();
+                extensionSocket.emit("extension:edits", text);
+            }
+            else {
+                console.log(`> extension: changed document doesn't matches shared globalActiveDocument.`);
+            }
         }
-        else {
-            console.log(`> extension: changed document doesn't matches shared globalActiveDocument.`);
-        }
-    }
 
-    console.log(`> shareFileCommand: attaching onDidChangeTextDocument event`);
+        globalChangeEventListener = vscode.workspace.onDidChangeTextDocument(changeListenerCallback);
+        areEventListenersActive = true;
 
-    globalChangeEventListener = vscode.workspace.onDidChangeTextDocument(changeListenerCallback);
+        // set up event listener for browser edits
+        console.log(`> shareFileCommand: attaching browser:edits event`);
+        extensionSocket.on("browser:edits", (msg) => {
+            console.log(`> socket: [browser:edits]: ${msg}`);
+            // there's probably a better way to do this, but...
+            // need to access the properties of the document and its lines to get start and end positions
+            // then apply an edit to that range which replaces the document with the new received text
+            if(globalActiveDocument === null) {
+                console.log(`> ERROR: globalActiveDocument currently NULL.`);
+                return;
+            }
+            let lineCount = globalActiveDocument.lineCount;
+            let firstLine = globalActiveDocument.lineAt(0);
+            let lastLine = globalActiveDocument.lineAt(lineCount - 1);
+            let firstLineRange = firstLine.range;
+            let lastLineRange = lastLine.range;
+            let deleteRange = firstLineRange.with(firstLineRange.start, lastLineRange.end);
+            // need to re-do activetexteditor if closed
 
-    // set up event listener for browser edits
-    console.log(`> shareFileCommand: attaching browser:edits event`);
-    extensionSocket.on("browser:edits", (msg) => {
-        console.log(`> socket: [browser:edits]: ${msg}`);
-        // there's probably a better way to do this, but...
-        // need to access the properties of the document and its lines to get start and end positions
-        // then apply an edit to that range which replaces the document with the new received text
-        if(globalActiveDocument === null) {
-            console.log(`> ERROR: globalActiveDocument currently NULL.`);
-            return;
-        }
-        let lineCount = globalActiveDocument.lineCount;
-        // console.log("Document linecount: " + lineCount)
-        let firstLine = globalActiveDocument.lineAt(0);
-        let lastLine = globalActiveDocument.lineAt(lineCount - 1);
-        // console.log("Document first line:" + firstLine.text)
-        // console.log("Document last line:" + lastLine.text)
-        let firstLineRange = firstLine.range;
-        let lastLineRange = lastLine.range;
-        // console.log("First line range: " + firstLineRange.start + " to " + firstLineRange.end)
-        // console.log("Last line range: " + lastLineRange.start + " to " + lastLineRange.end)
-        let deleteRange = firstLineRange.with(firstLineRange.start, lastLineRange.end);
-        // console.log("Delete range: " + deleteRange.start + " to " + deleteRange.end)
-        // need to re-do activetexteditor if closed
+            // if our globalActiveDocument has changed (i.e. we called share on another file, need to preseve the current 'globalActiveDocument' somehow
+            const currentGlobalActiveDocument = globalActiveDocument;
 
-        // if our globalActiveDocument has changed (i.e. we called share on another file, need to preseve the current 'globalActiveDocument' somehow
-        const currentGlobalActiveDocument = globalActiveDocument;
+            // make globalActiveDocument NULL until we finish applying the edit
+            // this is so that the applied changes don't trigger the 'onDidGetDocumentChange' event
+            globalActiveDocument = null;
 
-        // make globalActiveDocument NULL until we finish applying the edit
-        // this is so that the applied changes don't trigger the 'onDidGetDocumentChange' event
-        globalActiveDocument = null;
-
-
-        // instantiate and apply edit
-        let newEdit = new vscode.WorkspaceEdit();
-        newEdit.replace(currentGlobalActiveDocument.uri, deleteRange, msg);
-        // after applying edit (in the 'then' callback, reinstate globalActiveDocument)
-        vscode.workspace.applyEdit(newEdit).then( () => {
-            console.log("> edit applied, reinstating global active doc");
-            // reinstate globalActiveDocument
-            globalActiveDocument = currentGlobalActiveDocument;
+            // instantiate and apply edit
+            let newEdit = new vscode.WorkspaceEdit();
+            newEdit.replace(currentGlobalActiveDocument.uri, deleteRange, msg);
+            // after applying edit (in the 'then' callback, reinstate globalActiveDocument)
+            vscode.workspace.applyEdit(newEdit).then( () => {
+                console.log("> edit applied, reinstating global active doc");
+                // reinstate globalActiveDocument
+                globalActiveDocument = currentGlobalActiveDocument;
+            });
         });
-
-    });
+    } 
+    else {
+        console.log(`areEventListenersActive is ${areEventListenersActive} so we're not attaching the event listeners again`);
+    }
 }
 
 function disconnect() {
     console.log(`> Called disconnectCommand`);
+
     if(extensionSocket === undefined) {
         console.log(`> disconnectCommand: No socket currently active. Returning.`);
         vscode.window.showErrorMessage(`sidewindow: No connection currently active.`, {modal: false});
         return;
     }
+
+    // should destroy the event listeners
+    console.log(`> disposing globalChangeEventListener`);
+    globalChangeEventListener.dispose();
+
+    console.log(`> disposing browser:edits listener`);
+    extensionSocket.off('browser:edits');
+
+    console.log(`> resetting areEventListenersActive to false`);
+    areEventListenersActive = false;
+
     console.log(`> disconnectCommand: Now disconnecting socket...`);
     extensionSocket.disconnect();
     console.log(`> disconnectCommand: Socket disconnected.`);
