@@ -150,6 +150,15 @@ function startConnection() {
                         vscode.window.showInformationMessage(`Received message: ${msg}`);
                     });
 
+
+                    extensionSocket.on("browser:request-edit", (msg) => {
+                        console.log("> socket: got 'request-edit'");
+                        while(globalActiveDocument === null) {
+                            console.log("> socket: got 'request-edit', waiting for globalActiveDocument to not be null");
+                        }
+                        let text = globalActiveDocument.getText();
+                        extensionSocket.emit("extension:edits", text);
+                    });
                 }
             }
         });
