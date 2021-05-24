@@ -34,8 +34,14 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let showRoomCodeCommand = vscode.commands.registerCommand('sidewindow.showRoomCode', connection.showRoomCode);
 
+	let openClientInBrowserCommand = vscode.commands.registerCommand('sidewindow.openClientInBrowser', () => {
+		let clientLink = vscode.Uri.parse("https://sidewindow.herokuapp.com");
+		vscode.env.openExternal(clientLink);
+	});
+
 
 	context.subscriptions.push(disposable);
+	context.subscriptions.push(openClientInBrowserCommand);
 	context.subscriptions.push(connectAndShareCommand);
 	context.subscriptions.push(startConnectionCommand);
 	context.subscriptions.push(sendMessageCommand);
