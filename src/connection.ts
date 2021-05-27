@@ -44,7 +44,7 @@ function startConnection() {
 
             if(extensionSocket.connected) {
                 console.log(`> startConnectionCommand: socket is active and is currently connected.`);
-                vscode.window.showInformationMessage("sidewindow: You are already connected.");
+                vscode.window.showInformationMessage("SideWindow: You are already connected.");
                 resolve("already connected!");
                 return;
             }
@@ -72,19 +72,34 @@ function startConnection() {
         console.log("> startConnectionCommand: Now prompting user for input");
         const connectionAddrInput = vscode.window.showInputBox(showInputBoxOptions);
 
-        connectionAddrInput.then((connectionAddr) => {
+        // doing a showQuickPick with 'yes/no'
+        const showQuickPickOptions: vscode.QuickPickOptions = {
+            title: "Connect to SideWindow? This will share the current active editor contents.",
+            canPickMany: false,
+            ignoreFocusOut: false,
+        }
+
+        const quickPickConnect = vscode.window.showQuickPick(["Yes", "No"], showQuickPickOptions);
+        const connectionAddr = "https://sidewindow.herokuapp.com";
+
+        // connectionAddrInput.then((connectionAddr) => {
+        quickPickConnect.then((quickPickResponse) => {
             // determine what to do with input
             // again, this will not be available in production
-            if(connectionAddr === undefined) {
+            // if(connectionAddr === undefined) {
+            if(quickPickResponse === undefined) {
                 console.log("> startConnectionCommand: input box was closed.");
                 return;
             }
-            else if(connectionAddr === "") {
-                console.log("> startConnectionCommand: empty connectionAddr. Returning.");
+            // else if(connectionAddr === "") {
+            else if(quickPickResponse === "No") {
+                // console.log("> startConnectionCommand: empty connectionAddr. Returning.");
+                console.log("> startConnectionCommand: Use chose to not connect. Returning.");
                 return;
             }
             else {
                 console.log(`> startConnectionCommand: attempting to connect to ${connectionAddr}`);
+                vscode.window.showInformationMessage("Now connecting to SideWindow...")
 
                 const extensionSocketOptions = {
                     reconnection: true,
@@ -111,7 +126,7 @@ function startConnection() {
                         reject(`REJECT - Error connecting!: ${error}`);
                         console.log(`> socket: received a connection error: ${error}`);
                         console.log(`> Now disconnecting...`);
-                        vscode.window.showErrorMessage("sidewindow: Error connecting to server.");
+                        vscode.window.showErrorMessage("SideWindow: Error connecting to server.");
                         extensionSocket.disconnect();
                     });
 
@@ -121,7 +136,7 @@ function startConnection() {
                         roomId = extensionSocket.id.slice(0, 4);
                         console.log(`> startConnectionCommand: room_id is ${roomId}`);
                         console.log(`> socket: connected to room ${roomId}`);
-                        vscode.window.showInformationMessage(`sidewindow: Connected to room ${roomId}`, {modal: false});
+                        vscode.window.showInformationMessage(`SideWindow: Connected to room ${roomId}`, {modal: false});
 
                         // TODO: update status bar item
                         statusbar.initializeStatusBarItem(roomId);
@@ -131,7 +146,7 @@ function startConnection() {
                     extensionSocket.on("disconnect", (msg) => {
                         console.log(`> socket: disconnect event received! We've been disconnected`);
                         console.log(`> socket: disconnect message is ${msg}`);
-                        vscode.window.showInformationMessage(`sidewindow: You have been disconnected. Reason: ${msg}.`, {modal: true});
+                        vscode.window.showInformationMessage(`SideWindow: You have been disconnected. Reason: ${msg}.`, {modal: true});
 
                         // let disconnect function handle the disconnection behaviour
                         disconnect();
@@ -169,12 +184,12 @@ function sendMessage() {
     console.log("> Called sendMessageCommand");
     if(extensionSocket === undefined) {
         console.log("> sendMessageCommand: No socket currently active, returning.");
-        vscode.window.showErrorMessage(`sidewindow: No connection currently active.`, {modal: false});
+        vscode.window.showErrorMessage(`SideWindow: No connection currently active.`, {modal: false});
         return;
     } else {
         if(!extensionSocket.connected) {
             console.log("> sendMessageCommand: Socket exists but is not connected");
-            vscode.window.showErrorMessage(`sidewindow: No connection currently active.`, {modal: false});
+            vscode.window.showErrorMessage(`SideWindow: No connection currently active.`, {modal: false});
             return;
         }
     }
@@ -193,7 +208,7 @@ function sendMessage() {
         (message) => {
             console.log(`> sendMessageCommand: user input '${message}'`);
             extensionSocket.emit("extension:msg", message);
-            vscode.window.showInformationMessage(`sidewindow: Sent message '${message}' to connected clients`);
+            vscode.window.showInformationMessage(`SideWindow: Sent message '${message}' to connected clients`);
         }
     );
 }
@@ -203,12 +218,12 @@ function shareFile() {
     const activeTextEditor = vscode.window.activeTextEditor;
     if(extensionSocket === undefined) {
         console.log(`> shareFileCommand: No socket currently active. Returning.`);
-        vscode.window.showErrorMessage(`sidewindow: No connection currently active.`);
+        vscode.window.showErrorMessage(`SideWindow: No connection currently active.`);
         return;
     }
     else if(activeTextEditor === undefined) {
         console.log(`> shareFileCommand: active text editor is undefined. Returning.`);
-        vscode.window.showErrorMessage(`sidewindow: No active editor to share.`);
+        vscode.window.showErrorMessage(`SideWindow: No active editor to share.`);
         return;
     }
 
@@ -306,7 +321,7 @@ function disconnect() {
 
     if(extensionSocket === undefined) {
         console.log(`> disconnectCommand: No socket currently active. Returning.`);
-        vscode.window.showErrorMessage(`sidewindow: No connection currently active.`, {modal: false});
+        vscode.window.showErrorMessage(`SideWindow: No connection currently active.`, {modal: false});
         return;
     }
 
@@ -331,11 +346,11 @@ function showRoomCode() {
     console.log(`> Called showRoomCodeCommand`);
     if(roomId === undefined) {
         console.log(`> showRoomCommand: No socket currently active. Returning.`);
-        vscode.window.showErrorMessage(`sidewindow: No connection currently active.`, {modal: false});
+        vscode.window.showErrorMessage(`SideWindow: No connection currently active.`, {modal: false});
         return;
     } else {
         console.log(`> showRoomCodeCommand: showing room code ${roomId} to user.`);
-        vscode.window.showInformationMessage(`sidewindow: Room code is ${roomId}`, {modal: false});
+        vscode.window.showInformationMessage(`SideWindow: Room code is ${roomId}`, {modal: false});
         return;
     }
 }
