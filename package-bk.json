@@ -24,8 +24,8 @@
       "activitybar": [
         {
           "id": "sidewindowViewContainer",
-          "title": "SideWindow",
-          "icon": "$(mirror-public)"
+          "title": "sidewindow Container",
+          "icon": "$(ports-open-browser-icon)"
         }
       ]
     },
@@ -36,6 +36,12 @@
           "name": "sidewindow - Start Here (Name)",
           "icon": "$(broadcast)",
           "contextualTitle": "sidewindow - Start (Contextual Title)"
+        },
+        {
+          "id": "sidewindowOtherView",
+          "name": "sidewindow - Other View (Name)",
+          "icon": "$(dashboard)",
+          "contextualTitle": "sidewindow - Other View (Contextual Title)"
         }
       ]
     },
@@ -43,6 +49,10 @@
       {
         "view": "sidewindowStartView",
         "contents": "Welcome to SideWindow!\nOpen up a file you'd like to share, and click the button below!\n[Share Current File](command:sidewindow.connectAndShare)\nOnce you're connected, use the [SideWindow Client](https://sidewindow.herokuapp.com) on another device to view and edit!\n[Open Browser Client](command:sidewindow.openClientInBrowser)\nUse the following button to disconnect:\n[Disconnect](command:sidewindow.disconnect)"
+      },
+      {
+        "view": "sidewindowOtherView",
+        "contents": "Welcome to sidewindow! \n Connect and Share Immediately: \n[Start Sharing](command:sidewindow.connectAndShare) \nClick to begin connection and create a room: \n[Connect to Server](command:sidewindow.startConnection) \n Share currently opened file (click again if you want to share a different file): \n[Share currently open file](command:sidewindow.shareFile) \n Once you're connected, use the [SideWindow Client](https://sidewindow.herokuapp.com) on another device to view and edit!\n Use the following button to disconnect:\n[Disconnect](command:sidewindow.disconnect)"
       }
     ],
     "commands": [
@@ -51,8 +61,24 @@
         "title": "sidewindow - Connect and Share"
       },
       {
+        "command": "sidewindow.startConnection",
+        "title": "sidewindow - Start Connection"
+      },
+      {
+        "command": "sidewindow.sendMessage",
+        "title": "sidewindow - Send Message"
+      },
+      {
+        "command": "sidewindow.shareFile",
+        "title": "sidewindow - Share Currently Opened File"
+      },
+      {
         "command": "sidewindow.disconnect",
         "title": "sidewindow - Disconnect from server"
+      },
+      {
+        "command": "sidewindow.showRoomCode",
+        "title": "sidewindow - Show Room Code"
       }
     ]
   },
