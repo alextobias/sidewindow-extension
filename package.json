@@ -1,22 +1,24 @@
 {
   "name": "sidewindow",
-  "publisher": "alextobiasdev",
-  "displayName": "SideWindow",
-  "description": "SideWindow: cast your editor contents to remotely view and edit on another device!",
   "version": "1.0.0",
+  "publisher": "alextobiasdev",
   "engines": {
     "vscode": "^1.56.0"
   },
+  "license": "SEE LICENSE IN LICENSE.TXT",
+  "displayName": "SideWindow",
+  "description": "SideWindow: cast your editor contents to remotely view and edit on another device!",
   "categories": [
-    "Other"
+    "Other", "Notebooks"
   ],
+  "icon": "images/sidewindow-logo.png",
+  "keywords": ["remote", "view", "cast", "share", "mobile"],
+  "author": {
+    "name": "alextobias"
+  },
   "activationEvents": [
     "onCommand:sidewindow.connectAndShare",
-    "onCommand:sidewindow.startConnection",
-    "onCommand:sidewindow.sendMessage",
-    "onCommand:sidewindow.shareFile",
     "onCommand:sidewindow.disconnect",
-    "onCommand:sidewindow.showRoomCode",
     "onCommand:sidewindow.openClientInBrowser"
   ],
   "main": "./out/extension.js",
@@ -34,7 +36,7 @@
       "sidewindowViewContainer": [
         {
           "id": "sidewindowStartView",
-          "name": "SideWindow - Start Here!",
+          "name": "Start Here",
           "icon": "$(mirror-public)",
           "contextualTitle": "SideWindow - Start"
         }
@@ -89,6 +91,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/microsoft/vscode-wordcount.githttps://github.com/alextobias/sidewindow-extension.git"
-  }
+    "url": "https://github.com/alextobias/sidewindow-extension.git"
+  },
+  "homepage": "https://github.com/alextobias/sidewindow-extension.git"
 }
