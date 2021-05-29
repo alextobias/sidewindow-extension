@@ -2,8 +2,8 @@
   "name": "sidewindow",
   "publisher": "alextobiasdev",
   "displayName": "SideWindow",
-  "description": "SideWindow: view & edit your files from another device",
-  "version": "0.0.1",
+  "description": "SideWindow: cast your editor contents to remotely view and edit on another device!",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.56.0"
   },
@@ -34,16 +34,16 @@
       "sidewindowViewContainer": [
         {
           "id": "sidewindowStartView",
-          "name": "sidewindow - Start Here (Name)",
-          "icon": "$(broadcast)",
-          "contextualTitle": "sidewindow - Start (Contextual Title)"
+          "name": "SideWindow - Start Here!",
+          "icon": "$(mirror-public)",
+          "contextualTitle": "SideWindow - Start"
         }
       ]
     },
     "viewsWelcome": [
       {
         "view": "sidewindowStartView",
-        "contents": "Welcome to SideWindow!\nOpen up a file you'd like to share, and click the button below!\n[Share Current File](command:sidewindow.connectAndShare)\nOnce you're connected, use the [SideWindow Client](https://sidewindow.herokuapp.com) on another device to view and edit!\n[Open Browser Client](command:sidewindow.openClientInBrowser)\nUse the following button to disconnect:\n[Disconnect](command:sidewindow.disconnect)"
+        "contents": "Welcome to SideWindow!\nOpen up a file you'd like to share, and click the button below!\n[Share Current File](command:sidewindow.connectAndShare)\nOnce you're connected, you'll get a room code in the status bar.\nEnter the code in the [SideWindow Client](https://sidewindow.herokuapp.com) on another device to view and edit!\n[Open Browser Client](command:sidewindow.openClientInBrowser)\nWhen you're done, click the button below to disconnect.\n[Disconnect](command:sidewindow.disconnect)"
       }
     ],
     "commands": [

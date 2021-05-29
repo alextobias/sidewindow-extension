@@ -1,77 +1,38 @@
-# sidewindow README
+# SideWindow
 
-This is the README for my VSCode extension "SideWindow".
+SideWindow lets you cast your editor contents to other devices, enabling you to view and edit your code remotely.
+
+Use SideWindow to view/edit code on your phone, or another device, like a second monitor. Or, collaborate with someone remotely!
+
+SideWindow is lightweight, super convenient and quick to set up for lighter use cases.  If you're looking for a more fully-featured remote solution, the VS Code Live Share extension is where you may want to look.
+
+The repo for the extension is hosted here: [https://github.com/alextobias/sidewindow-extension](https://github.com/alextobias/sidewindow-extension)
+
+The repo for the webapp/client is hosted here: [https://github.com/alextobias/sidewindow](https://github.com/alextobias/sidewindow)
 
 ## Features
 
 SideWindow lets you view and edit your editor contents on other devices. 
 
-It does this by connecting to my service I've set up here: [sidewindow.herokuapp.com](https://sidewindow.herokuapp.com)
+It does this by connecting to the SideWindow webapp: [sidewindow.herokuapp.com](https://sidewindow.herokuapp.com)
 
-Screenshots to come later! I'm still working on this.
+![SideWindow WebApp](./images/sidewindow-landing.png)
+![SideWindow Editor](./images/sidewindow-editor.png)
 
-## The rest of this README is stuff from the extension template generator that I've chosen to not remove yet.
+In the extension menu, you'll find a button to share your active editor contents. When you do, you'll receive a room ID. 
 
+Enter the room ID in the webapp from another device to instantly access your code - it's that simple!
 
-For example if there is an image subfolder under your extension project workspace:
+SideWindow supports multiple clients connected to the same room, so you could have multiple devices connected simultaneously!
 
-\!\[feature X\]\(images/feature-x.png\)
+## Background
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+I built SideWindow because I like to code on my laptop, and wanted to be able to use my phone like a second monitor.
 
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
+You could use it to pull up code on your phone like me, or you could use it to edit on separate computers/laptops/devices etc. You could also use it to edit collaboratively with someone else. 
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
 ### 1.0.0
 
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Initial release of SideWindow.
