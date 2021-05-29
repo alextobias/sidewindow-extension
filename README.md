@@ -16,8 +16,8 @@ SideWindow lets you cast your editor contents to other devices, enabling you to 
 
 * It does this by connecting to the SideWindow webapp: [sidewindow.herokuapp.com](https://sidewindow.herokuapp.com)
 
-![SideWindow WebApp](./images/sidewindow-landing.png)
-![SideWindow Editor](./images/sidewindow-editor.png)
+![SideWindow WebApp](images/sidewindow-landing.png)
+![SideWindow Editor](images/sidewindow-editor.png)
 
 * In the extension menu, you'll find a button to share your active editor contents. When you do, you'll receive a room ID. 
 
