@@ -4,16 +4,16 @@ let statusBarItem: vscode.StatusBarItem;
 function initializeStatusBarItem(message: string) {
 	console.log(`> statusBarItem: initializing with text ${message}`);
 	statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-	statusBarItem.text = `SideWindow: ${message}`;
-	statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+	statusBarItem.text = `$(mirror-public) ${message}`;
+	// statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
 	// statusBarItem.backgroundColor = vscode.ThemeColor;
-	statusBarItem.color = vscode.ThemeColor;
+	// statusBarItem.color = vscode.ThemeColor;
 	statusBarItem.show();
 }
 
 function changeStatusBarItem(message: string) {
 	console.log(`> statusBarItem: changing message to ${message}`);
-	statusBarItem.text = `SideWindow: ${message}`;
+	statusBarItem.text = `$(mirror-public) ${message}`;
 	statusBarItem.show();
 }
 
