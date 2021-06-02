@@ -2,8 +2,6 @@
 
 ## [sidewindow.xyz](https://www.sidewindow.xyz)
 
-![Sidewindow - demo image](images/sidewindow-landing.png)
-
 ![SideWindow - demo gif](images/sw-gif-hq-5.gif)
 
 SideWindow lets you cast your editor contents to other devices, via this extension and a [companion webapp](https://www.sidewindow.xyz).
