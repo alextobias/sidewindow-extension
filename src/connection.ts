@@ -11,7 +11,13 @@ let extensionSocket: Socket;
 import * as statusbar from './statusbar';
 
 async function connectAndShare() {
+
     console.log(`> called connectAndShare`);
+    // check here if an active document is open
+    if(vscode.window.activeTextEditor === undefined) {
+        vscode.window.showErrorMessage("No editor is currently open.");
+        return;
+    }
     try {
         const connectionReturn = await startConnection();
         console.log(`> startConnection resolved: ${connectionReturn}`);
@@ -44,7 +50,7 @@ function startConnection() {
 
             if(extensionSocket.connected) {
                 console.log(`> startConnectionCommand: socket is active and is currently connected.`);
-                vscode.window.showInformationMessage("SideWindow: You are already connected.");
+                // vscode.window.showInformationMessage("SideWindow: You are already connected.");
                 resolve("already connected!");
                 return;
             }
@@ -77,7 +83,7 @@ function startConnection() {
             title: "Connect to SideWindow? This will share the current active editor contents.",
             canPickMany: false,
             ignoreFocusOut: false,
-        }
+        };
 
         const quickPickConnect = vscode.window.showQuickPick(["Yes", "No"], showQuickPickOptions);
         const connectionAddr = "https://sidewindow.herokuapp.com";
@@ -168,11 +174,13 @@ function startConnection() {
 
                     extensionSocket.on("browser:request-edit", (msg) => {
                         console.log("> socket: got 'request-edit'");
-                        while(globalActiveDocument === null) {
+                        if(globalActiveDocument === null) {
                             console.log("> socket: got 'request-edit', waiting for globalActiveDocument to not be null");
+                            extensionSocket.emit("extension:edits", "no file shared");
+                        } else {
+                            let text = globalActiveDocument.getText();
+                            extensionSocket.emit("extension:edits", text);
                         }
-                        let text = globalActiveDocument.getText();
-                        extensionSocket.emit("extension:edits", text);
                     });
                 }
             }
@@ -240,8 +248,8 @@ function shareFile() {
     console.log(`> shareFileCommand: will share ${filepath}`);
 
     let documentText = activeDocument.getText();
-    console.log(`> shareFileCommand: document text is as follows:`);
-    console.log(documentText);
+    // console.log(`> shareFileCommand: document text is as follows:`);
+    // console.log(documentText);
 
     // broadcast current contents
     extensionSocket.emit("extension:edits", documentText);
@@ -277,7 +285,7 @@ function shareFile() {
         // set up event listener for browser edits
         console.log(`> shareFileCommand: attaching browser:edits event`);
         extensionSocket.on("browser:edits", (msg) => {
-            console.log(`> socket: [browser:edits]: ${msg}`);
+            // console.log(`> socket: [browser:edits]: ${msg}`);
             // there's probably a better way to do this, but...
             // need to access the properties of the document and its lines to get start and end positions
             // then apply an edit to that range which replaces the document with the new received text
