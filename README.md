@@ -1,37 +1,53 @@
 # SideWindow
 
-SideWindow lets you cast your editor contents to other devices, enabling you to view and edit your code remotely.
+## [sidewindow.xyz](https://www.sidewindow.xyz)
 
-* Use SideWindow to view/edit code on your phone, or another device, like a second monitor. Or, collaborate with someone remotely!
+![Sidewindow - demo image](images/sidewindow-landing.png)
 
-* SideWindow is lightweight, super convenient and quick to set up for lighter use cases.  If you're looking for a more fully-featured remote solution, the VS Code Live Share extension is where you may want to look.
+![SideWindow - demo gif](images/sw-gif-hq-5.gif)
 
-* The repo for the extension is hosted here: [https://github.com/alextobias/sidewindow-extension](https://github.com/alextobias/sidewindow-extension)
+SideWindow lets you cast your editor contents to other devices, via this extension and a [companion webapp](https://www.sidewindow.xyz).
 
-* The repo for the webapp/client is hosted here: [https://github.com/alextobias/sidewindow](https://github.com/alextobias/sidewindow)
+You can use SideWindow from any device, from anywhere in the world, and even collaborate remotely with multiple devices.
 
-## Features
+**SideWindow is lightweight, super convenient and quick to set up for lighter use cases.  If you're looking for a more fully-featured remote solution, the VS Code Live Share extension is where you may want to look.**
 
-* SideWindow lets you view and edit your editor contents on other devices. 
 
-* It does this by connecting to the SideWindow webapp: [sidewindow.herokuapp.com](https://sidewindow.herokuapp.com)
+## Demonstration
 
-![SideWindow WebApp](images/sidewindow-landing.png)
-![SideWindow Editor](images/sidewindow-editor.png)
+To get started, open up the SideWindow panel in the sidebar, and hit 'Share Current File'.
 
-* In the extension menu, you'll find a button to share your active editor contents. When you do, you'll receive a room ID. 
+You'll receive a room code. If you miss the notification, the room code is also located in the status bar (bottom left).
 
-* Enter the room ID in the webapp from another device to instantly access your code - it's that simple!
+![SideWindow - sharing from editor](images/sw-gif-xhq-1.gif)
 
-* SideWindow supports multiple clients connected to the same room, so you could have multiple devices connected simultaneously!
+Go to **[sidewindow.xyz](https://www.sidewindow.xyz)**, and enter the room code you recieved.
 
-## Background
+If successful, you'll see your VS Code editor contents load into the browser editor.
 
-* I built SideWindow because I like to code on my laptop, and wanted to be able to use my phone like a second monitor.
+![SideWindow - connecting to webapp](images/sw-gif-xhq-2.gif)
 
-* You could use it to pull up code on your phone like me, or you could use it to edit on separate computers/laptops/devices etc. You could also use it to edit collaboratively with someone else. 
+You can tweak settings such as language highlighting, editor theme and font preferences.
+
+![SideWindow - tweaking webapp settings](images/sw-gif-xhq-3.gif)
+
+
+Edits you make in one editor will be mirrored to the others! Connect from any device, from anywhere in the world.
+
+This will even work with multiple connected browsers.
+
+![SideWindow - demonstrating editing](images/sw-gif-xhq-5.gif)
+
+To change the shared file, just click the 'Share Current File' button again.
+
+![SideWindow - sharing different files](images/sw-gif-xhq-6.gif)
 
 ## Release Notes
+
+### 1.0.1
+
+* SideWindow can now be found at [https://www.sidewindow.xyz](https://www.sidewindow.xyz).
+* Added some GIFs to the README page.
 
 ### 1.0.0
 
